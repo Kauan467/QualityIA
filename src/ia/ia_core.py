@@ -1,5 +1,5 @@
-from common_imports import *
-from dashboard import DashboardPerformance, AnaliseCausaRaiz
+from src.core.common_imports import *
+from src.analise.dashboard import DashboardPerformance, AnaliseCausaRaiz
 
 logger = logging.getLogger(__name__)
 

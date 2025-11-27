@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Dados e modelos
+data/treinamento/
+data/modelos/*.h5
+data/cache/
+*.h5
+
+# Logs
+logs/*.log
+*.log
+
+# Relatórios
+relatorios/
+
+# Configurações locais
+.env
+config/local_*.yaml
+config/local_*.json
+
+# Sistema
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Backups
+*.backup
+*.bak

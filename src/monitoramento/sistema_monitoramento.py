@@ -1,7 +1,7 @@
-from common_imports import *
-from dashboard import DashboardPerformance, InterfaceCorrecaoRapida, AnaliseCausaRaiz
-from ia_core import SistemaIATreinamento, DetectorDefeitosVisual, ColetorDadosIA
-from camera_manager import GerenciadorCamera
+from src.core.common_imports import *
+from src.analise.dashboard import DashboardPerformance, InterfaceCorrecaoRapida, AnaliseCausaRaiz
+from src.ia.ia_core import SistemaIATreinamento, DetectorDefeitosVisual, ColetorDadosIA
+from src.core.camera_manager import GerenciadorCamera
 
 logger = logging.getLogger(__name__)
 

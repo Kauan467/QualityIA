@@ -1,7 +1,14 @@
-from common_imports import *
-from sistema_monitoramento import SistemaMonitoramentoIA
-from templates import HTML_MONITORAMENTO_IA
-from camera_manager import GerenciadorCamera  
+import sys
+from pathlib import Path
+
+# Adiciona src ao path
+sys.path.insert(0, str(Path(__file__).parent.parent / 'src'))
+
+
+from src.core.common_imports import *
+from src.monitoramento.sistema_monitoramento import SistemaMonitoramentoIA
+from web.templates import HTML_MONITORAMENTO_IA
+from src.core.camera_manager import GerenciadorCamera  
 
 logger = logging.getLogger(__name__)
 app = Flask(__name__)

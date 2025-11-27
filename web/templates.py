@@ -1,4 +1,4 @@
-from common_imports import *
+from src.core.common_imports import *
 
 HTML_MONITORAMENTO_IA = """
 <!DOCTYPE html>
