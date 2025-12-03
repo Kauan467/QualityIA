@@ -6,84 +6,205 @@ HTML_MONITORAMENTO_IA = """
 <head>
     <meta charset="utf-8">
     <title>ENSINO E DETECÇÃO DE DEFEITOS - IA</title>
-    <style>
-        :root {
-            --primary: #1890ff;
-            --success: #52c41a;
-            --danger: #ff4d4f;
-            --warning: #faad14;
-            --background: #0f1b2d;
-        }
-        
-        body { 
-            font-family: 'Segoe UI', Arial, sans-serif; 
-            margin: 0; 
-            padding: 20px; 
-            background: var(--background);
-            color: white;
-        }
-        
-        .container { 
-            max-width: 1800px; 
-            margin: 0 auto; 
-            background: #1a2b3c; 
-            padding: 0;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-        
-        .header { 
-            background: linear-gradient(135deg, var(--primary), #096dd9); 
-            color: white; 
-            padding: 25px 40px; 
-            text-align: center; 
-            border-bottom: 2px solid #1890ff;
-        }
-        
-        .header h1 {
-            margin: 0;
-            font-size: 2em;
-            font-weight: 300;
-        }
-        
-        .header p {
-            margin: 10px 0 0 0;
-            opacity: 0.9;
-        }
-        
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 500px;
-            gap: 0;
-            min-height: 800px;
-        }
-        
-        .camera-section {
-            background: #000;
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 600px;
-            border-right: 2px solid #2d3b4d;
-        }
-        
-        .camera-feed {
-            max-width: 100%;
-            max-height: 600px;
-            object-fit: contain;
-        }
-        
-        .controls-section {
-            background: #1e2f3e;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            overflow-y: auto;
-            max-height: 800px;
-        }
+    # Procure por <style> e substitua todo o conteúdo entre <style> e </style>
+
+<style>
+    :root {
+        --primary: #1890ff;
+        --success: #52c41a;
+        --danger: #ff4d4f;
+        --warning: #faad14;
+        --background: #0f1b2d;
+    }
+    
+    body { 
+        font-family: 'Segoe UI', Arial, sans-serif; 
+        margin: 0; 
+        padding: 0;
+        background: var(--background);
+        color: white;
+        overflow-x: hidden;
+    }
+    
+    .container { 
+        max-width: 100vw;
+        height: 100vh;
+        margin: 0;
+        background: #1a2b3c; 
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .header { 
+        background: linear-gradient(135deg, var(--primary), #096dd9); 
+        color: white; 
+        padding: 15px 30px;  /* REDUZIDO */
+        text-align: center; 
+        border-bottom: 2px solid #1890ff;
+    }
+    
+    .header h1 {
+        margin: 0;
+        font-size: 1.5em;  /* REDUZIDO */
+        font-weight: 300;
+    }
+    
+    .header p {
+        margin: 5px 0 0 0;  /* REDUZIDO */
+        opacity: 0.9;
+        font-size: 0.9em;  /* REDUZIDO */
+    }
+    
+    .content {
+        display: grid;
+        grid-template-columns: 1fr 420px;  /* AJUSTADO */
+        gap: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+    
+    .camera-section {
+        background: #000;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+        border-right: 2px solid #2d3b4d;
+    }
+    
+    .camera-feed {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;  /* AJUSTADO */
+    }
+    
+    .controls-section {
+        background: #1e2f3e;
+        padding: 15px;  /* REDUZIDO */
+        display: flex;
+        flex-direction: column;
+        gap: 15px;  /* REDUZIDO */
+        overflow-y: auto;
+        max-height: calc(100vh - 100px);
+    }
+    
+    .panel {
+        background: #2d3b4d;
+        padding: 12px;  /* REDUZIDO */
+        border-radius: 8px;
+        border-left: 4px solid var(--primary);
+    }
+    
+    .panel h3 {
+        margin: 0 0 10px 0;  /* REDUZIDO */
+        font-size: 1em;  /* REDUZIDO */
+    }
+    
+    .panel-ia {
+        border-left-color: #13c2c2;
+    }
+    
+    .panel-treinamento {
+        border-left-color: var(--warning);
+    }
+    
+    .panel-coleta {
+        border-left-color: var(--success);
+    }
+    
+    /* Botões */
+    .btn {
+        padding: 8px 16px;  /* REDUZIDO */
+        margin: 5px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 0.9em;  /* REDUZIDO */
+        transition: all 0.3s;
+    }
+    
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    
+    .btn:hover { opacity: 0.8; transform: translateY(-2px); }
+    .btn:active { transform: translateY(0); }
+    
+    /* Status */
+    .status-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;  /* REDUZIDO */
+        border-bottom: 1px solid #3a4a5c;
+        font-size: 0.85em;  /* REDUZIDO */
+    }
+    
+    .status-item:last-child {
+        border-bottom: none;
+    }
+    
+    .status-label {
+        color: #8c9db5;
+        font-weight: 500;
+    }
+    
+    .status-value {
+        color: white;
+        font-weight: bold;
+    }
+    
+    /* Formulários */
+    select, input, textarea {
+        width: 100%;
+        padding: 8px;  /* REDUZIDO */
+        margin: 5px 0;
+        border: 1px solid #3a4a5c;
+        border-radius: 4px;
+        background: #1a2b3c;
+        color: white;
+        font-size: 0.9em;  /* REDUZIDO */
+    }
+    
+    textarea {
+        min-height: 60px;  /* REDUZIDO */
+        resize: vertical;
+    }
+    
+    /* Badges */
+    .badge {
+        display: inline-block;
+        padding: 3px 8px;  /* REDUZIDO */
+        border-radius: 12px;
+        font-size: 0.75em;  /* REDUZIDO */
+        font-weight: bold;
+    }
+    
+    .badge-success { background: var(--success); color: white; }
+    .badge-danger { background: var(--danger); color: white; }
+    .badge-warning { background: var(--warning); color: white; }
+    .badge-info { background: var(--primary); color: white; }
+    
+    /* Scrollbar customizado */
+    .controls-section::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .controls-section::-webkit-scrollbar-track {
+        background: #1a2b3c;
+    }
+    
+    .controls-section::-webkit-scrollbar-thumb {
+        background: #3a4a5c;
+        border-radius: 4px;
+    }
+    
+    .controls-section::-webkit-scrollbar-thumb:hover {
+        background: #4a5a6c;
+    }
+</style>
         
         .panel {
             background: #2d3b4d;
@@ -361,7 +482,6 @@ HTML_MONITORAMENTO_IA = """
             border-radius: 2px;
         }
 
-        /* NOVOS ESTILOS PARA AS FUNCIONALIDADES AVANÇADAS */
         .advanced-tools {
             background: linear-gradient(135deg, #667eea, #764ba2);
             color: white;

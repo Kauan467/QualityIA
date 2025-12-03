@@ -70,8 +70,8 @@ HTML_MONITORAMENTO_IA = """
         }
         
         .camera-feed {
-            max-width: 100%;
-            max-height: 600px;
+            width: 100%;
+            min-height: 600px;
             object-fit: contain;
         }
         
@@ -718,31 +718,10 @@ HTML_MONITORAMENTO_IA = """
                         <span class="status-value" id="totalAmostras">0</span>
                     </div>
                     
-                    <!-- Barra de progresso -->
-                    <div id="progressoContainer" style="display: none; margin: 15px 0;">
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-                            <span style="font-size: 12px; color: #a0b3c8;">Progresso do Treinamento</span>
-                            <span id="progressoTexto" style="font-size: 12px; color: #a0b3c8;">0%</span>
-                        </div>
-                        <div class="training-progress">
-                            <div class="progress-fill" id="progressoBarra" style="width: 0%"></div>
-                        </div>
-                        <div id="etapaTreinamento" style="text-align: center; font-size: 11px; color: #a0b3c8; margin-top: 5px;">
-                            Inicializando...
-                        </div>
-                    </div>
-                    
                     <button class="btn btn-ia" onclick="treinarIA()" id="btnTreinarIa">
-                        🚀 TREINAR IA COM CLASSIFICAÇÕES
+                     TREINAR IA COM CLASSIFICAÇÕES
                     </button>
                     
-                    <div class="teaching-instructions" style="margin-top: 15px;">
-                        <strong>📋 PRÉ-REQUISITOS PARA TREINAR:</strong><br>
-                        • Mínimo: 20+ amostras por categoria<br>
-                        • Ideal: 50+ amostras por categoria<br>
-                        • Balanceado: misture aprovados e defeitos<br>
-                        • Qualidade: imagens nítidas e bem iluminadas
-                    </div>
                 </div>
 
                 <!-- Feedback -->
@@ -751,11 +730,11 @@ HTML_MONITORAMENTO_IA = """
                 <!-- Controles -->
                 <div style="margin-top: auto; padding-top: 20px; border-top: 1px solid #2d3b4d;">
                     <button class="btn btn-primary" onclick="atualizarStatus()">
-                        🔄 Atualizar Status
+                        Atualizar Status
                     </button>
                     <button class="btn" onclick="recarregarCamera()" 
                             style="background: #722ed1; color: white; margin-top: 10px;">
-                        📷 Recarregar Câmera
+                        Recarregar Câmera
                     </button>
                 </div>
             </div>
@@ -794,7 +773,7 @@ HTML_MONITORAMENTO_IA = """
             
             <div class="modal-buttons">
                 <button class="btn-cancel" onclick="fecharModalCorrecao()">Cancelar</button>
-                <button class="btn-confirm" onclick="enviarCorrecao()">✅ Confirmar Correção</button>
+                <button class="btn-confirm" onclick="enviarCorrecao()">Confirmar Correção</button>
             </div>
         </div>
     </div>
@@ -816,409 +795,520 @@ HTML_MONITORAMENTO_IA = """
     </div>
 
     <script>
-        // FUNÇÃO PARA CLASSIFICAÇÃO MANUAL - VOCÊ ENSINA A IA
-        async function classificarManual(categoria) {
-            const descricoes = {
-                'APROVADO': 'Banco dentro do padrão de qualidade',
-                'RUGAS_TECIDO': 'Rugas no tecido/estofamento',
-                'FALHA_COSTURA': 'Costura irregular ou defeituosa',
-                'ERRO_MANUSEIO_ARRANHOES': 'Arranhões causados por ferramentas ou manuseio',
-                'ERRO_MANUSEIO_SUJEIRA': 'Sujeira, óleo ou manchas do operador',
-                'ERRO_MANUSEIO_MONTAGEM': 'Montagem incorreta de peças',
-                'DEFEITO_PINTURA_GOTEJAMENTO': 'Gotejamento ou excesso de tinta',
-                'STRUCTURE_TRINCO_DANIFICADO': 'Trinco quebrado ou danificado',
-                'STRUCTURE_PARAFUSO_FALTANDO': 'Parafuso faltando na estrutura',
-                'STRUCTURE_SOLDA_DEFEITUOSA': 'Solda mal executada ou frágil'
-            };
+
+async function atualizarStatus() {
+    try {
+        const response = await fetch('/status-ia');
+        const data = await response.json();
+        
+        document.getElementById('totalFrames').textContent = data.total_frames.toLocaleString();
+        document.getElementById('classificacoesIa').textContent = data.classificacoes_ia;
+        document.getElementById('aprovadosIa').textContent = data.aprovados_ia;
+        document.getElementById('defeitosDetectados').textContent = data.defeitos_detectados;
+        document.getElementById('amostrasColetadas').textContent = data.amostras_coletadas;
+        document.getElementById('totalAmostras').textContent = data.amostras_coletadas;
+        document.getElementById('statusIa').textContent = data.estado_ia;
+        document.getElementById('modeloTreinado').textContent = data.modelo_treinado ? 'Sim' : 'Não';
+        
+        const iaStatus = document.getElementById('iaStatus');
+        if (data.modo_manual) {
+            iaStatus.textContent = `MODO: ${data.estado_ia} (MANUAL)`;
+            iaStatus.style.background = 'rgba(255, 165, 0, 0.9)';
+        } else {
+            iaStatus.textContent = `MODO: ${data.estado_ia}`;
+            iaStatus.style.background = 'rgba(0, 0, 0, 0.7)';
+        }
+        
+        // Atualiza última classificação
+        const ultima = data.ultima_classificacao;
+        if (ultima) {
+            document.getElementById('ultimaClassificacao').textContent = 
+                `${ultima.descricao} (${(ultima.confianca * 100).toFixed(1)}%)`;
+            document.getElementById('ultimaClassificacao').style.color = 
+                ultima.classe === 'APROVADO' ? '#52c41a' : '#ff4d4f';
+        }
+        
+        // Atualiza indicador de modo
+        const modeIndicator = document.getElementById('modeIndicator');
+        if (data.estado_ia === 'AUTOMATICO') {
+            modeIndicator.textContent = data.modo_manual ? 
+                'MODO AUTOMÁTICO (FIXADO)' : 'MODO AUTOMÁTICO';
+            modeIndicator.className = 'mode-indicator mode-auto';
+        } else if (data.estado_ia === 'TREINANDO') {
+            modeIndicator.textContent = 'TREINANDO...';
+            modeIndicator.className = 'mode-indicator';
+            modeIndicator.style.background = 'rgba(255, 165, 0, 0.8)';
+        } else {
+            modeIndicator.textContent = data.modo_manual ? 
+                'MODO ENSINO' : 'MODO ENSINO';
+            modeIndicator.className = 'mode-indicator mode-teaching';
+        }
+        
+        // Atualiza estatísticas de defeitos por tipo
+        atualizarEstatisticasDefeitos(data.defeitos_por_tipo);
+        
+        // Atualiza amostras do disco
+        await atualizarAmostrasReais();
+        
+    } catch (error) {
+        console.error('Erro ao atualizar status:', error);
+    }
+}
+
+function atualizarEstatisticasDefeitos(defeitosPorTipo) {
+    const container = document.getElementById('defectStats');
+    container.innerHTML = '';
+    
+    for (const [tipo, quantidade] of Object.entries(defeitosPorTipo)) {
+        if (quantidade > 0) {
+            const div = document.createElement('div');
+            div.className = 'defect-stat';
+            div.textContent = `${tipo}: ${quantidade}`;
+            container.appendChild(div);
+        }
+    }
+}
+
+async function atualizarAmostrasReais() {
+    try {
+        const response = await fetch('/estatisticas-amostras');
+        const data = await response.json();
+        
+        if (data.success) {
+            document.getElementById('amostrasColetadas').textContent = data.total;
+            document.getElementById('totalAmostras').textContent = data.total;
             
-            const descricao = descricoes[categoria] || categoria;
-            const confirmacao = confirm(`CLASSIFICAR COMO:\\n${categoria}\\n\\n${descricao}\\n\\nConfirmar?`);
-            
-            if (!confirmacao) return;
-            
-            const feedback = document.getElementById('feedbackArea');
-            feedback.innerHTML = '<div class="feedback-message">🎓 Ensinando IA...</div>';
-            
-            try {
-                const response = await fetch('/classificar-manual', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        categoria: categoria,
-                        descricao_detalhada: descricao
-                    })
-                });
+            const defectStats = document.getElementById('defectStats');
+            if (defectStats) {
+                let html = '';
                 
-                const resultado = await response.json();
+                const categorias = [
+                    'APROVADO', 'RUGAS_TECIDO', 'FALHA_COSTURA',
+                    'ERRO_MANUSEIO_ARRANHOES', 'ERRO_MANUSEIO_SUJEIRA', 
+                    'ERRO_MANUSEIO_MONTAGEM', 'DEFEITO_PINTURA_GOTEJAMENTO',
+                    'STRUCTURE_TRINCO_DANIFICADO', 'STRUCTURE_PARAFUSO_FALTANDO', 
+                    'STRUCTURE_SOLDA_DEFEITUOSA'
+                ];
                 
-                if (resultado.sucesso) {
-                    feedback.innerHTML = `
-                        <div class="feedback-message success-feedback">
-                            ✅ ${resultado.mensagem}
+                categorias.forEach(cat => {
+                    const qtd = data.por_categoria[cat] || 0;
+                    const cor = qtd >= 20 ? '#52c41a' : qtd >= 10 ? '#faad14' : '#ff4d4f';
+                    const progresso = Math.min((qtd / 20) * 100, 100);
+                    
+                    html += `
+                        <div class="defect-stat" style="margin: 5px 0; padding: 8px; background: rgba(255,255,255,0.05); border-radius: 4px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                                <span style="font-size: 0.85em;">${cat}</span>
+                                <strong style="color: ${cor};">${qtd}</strong>
+                            </div>
+                            <div style="width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px;">
+                                <div style="width: ${progresso}%; height: 100%; background: ${cor}; border-radius: 2px;"></div>
+                            </div>
                         </div>
                     `;
+                });
+                
+                defectStats.innerHTML = html;
+            }
+            
+            console.log(`Amostras atualizadas: ${data.total} total`);
+        }
+    } catch (error) {
+        console.error('Erro ao atualizar amostras:', error);
+    }
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'm' || e.key === 'M') {
+        console.log('Alternando modo...');
+        
+        fetch('/alternar-modo', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                const modoTexto = data.manual ? 
+                    `${data.modo} (FIXADO)` : data.modo;
+                alert(`Modo alterado para: ${modoTexto}\n\n` +
+                      `O modo agora está ${data.manual ? 'TRAVADO' : 'AUTOMÁTICO'}.\n` +
+                      `Pressione M novamente para alternar.`);
+                
+                setTimeout(() => {
                     atualizarStatus();
-                } else {
-                    feedback.innerHTML = `
-                        <div class="feedback-message error-feedback">
-                            ❌ ${resultado.mensagem}
-                        </div>
-                    `;
-                }
-                
-            } catch (error) {
-                feedback.innerHTML = `
-                    <div class="feedback-message error-feedback">
-                        ❌ Erro: ${error}
-                    </div>
-                `;
+                }, 500);
+            } else {
+                alert('Erro: ' + (data.erro || 'Desconhecido'));
             }
+        })
+        .catch(e => {
+            console.error('Erro:', e);
+            alert('Erro ao alternar modo: ' + e);
+        });
+    }
+});
+
+async function classificarManual(categoria) {
+    const descricoes = {
+        'APROVADO': 'Banco dentro do padrão de qualidade',
+        'RUGAS_TECIDO': 'Rugas no tecido/estofamento',
+        'FALHA_COSTURA': 'Costura irregular ou defeituosa',
+        'ERRO_MANUSEIO_ARRANHOES': 'Arranhões causados por ferramentas ou manuseio',
+        'ERRO_MANUSEIO_SUJEIRA': 'Sujeira, óleo ou manchas do operador',
+        'ERRO_MANUSEIO_MONTAGEM': 'Montagem incorreta de peças',
+        'DEFEITO_PINTURA_GOTEJAMENTO': 'Gotejamento ou excesso de tinta',
+        'STRUCTURE_TRINCO_DANIFICADO': 'Trinco quebrado ou danificado',
+        'STRUCTURE_PARAFUSO_FALTANDO': 'Parafuso faltando na estrutura',
+        'STRUCTURE_SOLDA_DEFEITUOSA': 'Solda mal executada ou frágil'
+    };
+    
+    const descricao = descricoes[categoria] || categoria;
+    const confirmacao = confirm(`CLASSIFICAR COMO:\n${categoria}\n\n${descricao}\n\nConfirmar?`);
+    
+    if (!confirmacao) return;
+    
+    const feedback = document.getElementById('feedbackArea');
+    feedback.innerHTML = '<div class="feedback-message"> Ensinando IA...</div>';
+    
+    try {
+        const response = await fetch('/classificar-manual', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                categoria: categoria,
+                descricao_detalhada: descricao
+            })
+        });
+        
+        const resultado = await response.json();
+        
+        if (resultado.sucesso) {
+            feedback.innerHTML = `
+                <div class="feedback-message success-feedback">
+                    ✅ ${resultado.mensagem}
+                </div>
+            `;
+            await atualizarStatus();
+            await atualizarAmostrasReais();
+        } else {
+            feedback.innerHTML = `
+                <div class="feedback-message error-feedback">
+                 ${resultado.mensagem}
+                </div>
+            `;
         }
+        
+    } catch (error) {
+        feedback.innerHTML = `
+            <div class="feedback-message error-feedback">
+             Erro: ${error}
+            </div>
+        `;
+    }
+}
 
-        // Atualizar status do sistema
-        async function atualizarStatus() {
-            try {
-                const response = await fetch('/status-ia');
-                const data = await response.json();
-                
-                document.getElementById('totalFrames').textContent = data.total_frames.toLocaleString();
-                document.getElementById('classificacoesIa').textContent = data.classificacoes_ia;
-                document.getElementById('aprovadosIa').textContent = data.aprovados_ia;
-                document.getElementById('defeitosDetectados').textContent = data.defeitos_detectados;
-                document.getElementById('amostrasColetadas').textContent = data.amostras_coletadas;
-                document.getElementById('totalAmostras').textContent = data.amostras_coletadas;
-                document.getElementById('statusIa').textContent = data.estado_ia;
-                document.getElementById('modeloTreinado').textContent = data.modelo_treinado ? 'Sim' : 'Não';
-                
-                // Atualiza última classificação
-                const ultima = data.ultima_classificacao;
-                if (ultima) {
-                    document.getElementById('ultimaClassificacao').textContent = 
-                        `${ultima.descricao} (${(ultima.confianca * 100).toFixed(1)}%)`;
-                    document.getElementById('ultimaClassificacao').style.color = 
-                        ultima.classe === 'APROVADO' ? '#52c41a' : '#ff4d4f';
-                }
-                
-                // Atualiza indicador de modo
-                const modeIndicator = document.getElementById('modeIndicator');
-                if (data.estado_ia === 'AUTOMATICO') {
-                    modeIndicator.textContent = 'MODO AUTOMÁTICO';
-                    modeIndicator.className = 'mode-indicator mode-auto';
-                } else {
-                    modeIndicator.textContent = 'MODO ENSINO';
-                    modeIndicator.className = 'mode-indicator mode-teaching';
-                }
-                
-                // Atualiza estatísticas de defeitos por tipo
-                atualizarEstatisticasDefeitos(data.defeitos_por_tipo);
-                
-            } catch (error) {
-                console.error('Erro ao atualizar status:', error);
-            }
+function simularProgressoTreinamento() {
+    const container = document.getElementById('progressoContainer');
+    const barra = document.getElementById('progressoBarra');
+    const texto = document.getElementById('progressoTexto');
+    const etapa = document.getElementById('etapaTreinamento');
+    
+    container.style.display = 'block';
+    
+    const etapas = [
+        {progresso: 10, texto: "10%", etapa: "Lendo dados de treinamento"},
+        {progresso: 25, texto: "25%", etapa: "Pré-processamento de imagens"},
+        {progresso: 40, texto: "40%", etapa: "Inicializando rede neural"},
+        {progresso: 60, texto: "60%", etapa: "Treinando camadas convolucionais"},
+        {progresso: 75, texto: "75%", etapa: "Validando precisão"},
+        {progresso: 90, texto: "90%", etapa: "Salvando modelo treinado"},
+        {progresso: 100, texto: "100%", etapa: "Treinamento concluído!"}
+    ];
+    
+    let etapaAtual = 0;
+    
+    const intervalo = setInterval(() => {
+        if (etapaAtual < etapas.length) {
+            const etapaInfo = etapas[etapaAtual];
+            barra.style.width = etapaInfo.progresso + '%';
+            texto.textContent = etapaInfo.texto;
+            etapa.textContent = etapaInfo.etapa;
+            etapaAtual++;
+        } else {
+            clearInterval(intervalo);
+            // Mantém a barra visível por mais 2 segundos
+            setTimeout(() => {
+                container.style.display = 'none';
+            }, 2000);
         }
+    }, 3000); // Muda a cada 3 segundos
+}
 
-        function atualizarEstatisticasDefeitos(defeitosPorTipo) {
-            const container = document.getElementById('defectStats');
-            container.innerHTML = '';
+
+async function treinarIA() {
+    const btn = document.getElementById('btnTreinarIa');
+    const feedback = document.getElementById('feedbackArea');
+    const totalAmostras = parseInt(document.getElementById('amostrasColetadas').textContent);
+    if (totalAmostras < 20) {
+        feedback.innerHTML = `
+            <div class="feedback-message error-feedback">
+                Amostras insuficientes!<br>
+                Colete pelo menos 20 amostras antes de treinar.<br>
+                Atualmente: ${totalAmostras} amostras
+            </div>
+        `;
+        return;
+    }
+    
+    // salva estado original do botão
+    const textoOriginal = btn.textContent;
+    const corOriginal = btn.style.background;
+    
+    // atualiza UI para estado de carregamento
+    btn.disabled = true;
+    btn.textContent = "TREINANDO...";
+    btn.style.background = "#f39c12";
+    
+    simularProgressoTreinamento();
+    
+    feedback.innerHTML = '<div class="feedback-message">Iniciando treinamento da IA...</div>';
+    
+    try {
+        const response = await fetch('/treinar-ia-manual', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        
+        const resultado = await response.json();
+        
+        if (resultado.sucesso) {
+            feedback.innerHTML = `
+                <div class="feedback-message success-feedback">
+                    ✅ ${resultado.mensagem}
+                </div>
+                <div class="feedback-message" style="background: #e8f4fd; color: #1890ff; margin-top: 10px;">
+                     <strong>Treinamento em andamento:</strong><br>
+                    • Processando imagens coletadas<br>
+                    • Ajustando pesos da rede neural<br>
+                    • Validando precisão<br>
+                     Isto pode levar 2-5 minutos...
+                </div>
+            `;
             
-            for (const [tipo, quantidade] of Object.entries(defeitosPorTipo)) {
-                if (quantidade > 0) {
-                    const div = document.createElement('div');
-                    div.className = 'defect-stat';
-                    div.textContent = `${tipo}: ${quantidade}`;
-                    container.appendChild(div);
-                }
-            }
+            // Aguarda o treinamento terminar
+            await aguardarTreinamentoCompleto();
+            
+        } else {
+            throw new Error(resultado.mensagem);
         }
+        
+    } catch (error) {
+        feedback.innerHTML = `
+            <div class="feedback-message error-feedback">
+                 Erro: ${error}
+            </div>
+        `;
+    } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
+        btn.style.background = corOriginal;
+    }
+}
 
-        // FUNÇÃO PARA SIMULAR PROGRESSO DO TREINAMENTO
-        function simularProgressoTreinamento() {
-            const container = document.getElementById('progressoContainer');
-            const barra = document.getElementById('progressoBarra');
-            const texto = document.getElementById('progressoTexto');
-            const etapa = document.getElementById('etapaTreinamento');
-            
-            container.style.display = 'block';
-            
-            const etapas = [
-                {progresso: 10, texto: "10%", etapa: "Lendo dados de treinamento"},
-                {progresso: 25, texto: "25%", etapa: "Pré-processamento de imagens"},
-                {progresso: 40, texto: "40%", etapa: "Inicializando rede neural"},
-                {progresso: 60, texto: "60%", etapa: "Treinando camadas convolucionais"},
-                {progresso: 75, texto: "75%", etapa: "Validando precisão"},
-                {progresso: 90, texto: "90%", etapa: "Salvando modelo treinado"},
-                {progresso: 100, texto: "100%", etapa: "Treinamento concluído!"}
-            ];
-            
-            let etapaAtual = 0;
-            
-            const intervalo = setInterval(() => {
-                if (etapaAtual < etapas.length) {
-                    const etapaInfo = etapas[etapaAtual];
-                    barra.style.width = etapaInfo.progresso + '%';
-                    texto.textContent = etapaInfo.texto;
-                    etapa.textContent = etapaInfo.etapa;
-                    etapaAtual++;
-                } else {
-                    clearInterval(intervalo);
-                    // Mantém a barra visível por mais 2 segundos
-                    setTimeout(() => {
-                        container.style.display = 'none';
-                    }, 2000);
-                }
-            }, 3000); // Muda a cada 3 segundos
+async function aguardarTreinamentoCompleto() {
+    const feedback = document.getElementById('feedbackArea');
+    
+    const verificarStatus = setInterval(async () => {
+        await atualizarStatus();
+        const statusIa = document.getElementById('statusIa').textContent;
+        
+        if (statusIa === 'AUTOMATICO') {
+            clearInterval(verificarStatus);
+            feedback.innerHTML = `
+                <div class="feedback-message success-feedback">
+                    🎉 IA TREINADA COM SUCESSO!<br>
+                    • Modo automático ativado<br>
+                    • Reconhecimento em tempo real<br>
+                    • Detecção de múltiplos defeitos
+                </div>
+            `;
+        } else if (statusIa === 'MODO_ENSINO') {
+            clearInterval(verificarStatus);
+            feedback.innerHTML = `
+                <div class="feedback-message error-feedback">
+                    ❌ Treinamento falhou!<br>
+                    Continue coletando mais amostras e tente novamente.
+                </div>
+            `;
         }
+    }, 3000);
+}
 
-        // ATUALIZAR A FUNÇÃO treinarIA PARA CHAMAR O PROGRESSO
-        async function treinarIA() {
-            const btn = document.getElementById('btnTreinarIa');
-            const feedback = document.getElementById('feedbackArea');
-            
-            // Verifica se há amostras suficientes
-            const totalAmostras = parseInt(document.getElementById('amostrasColetadas').textContent);
-            if (totalAmostras < 20) {
-                feedback.innerHTML = `
-                    <div class="feedback-message error-feedback">
-                        ❌ Amostras insuficientes!<br>
-                        Colete pelo menos 20 amostras antes de treinar.<br>
-                        Atualmente: ${totalAmostras} amostras
-                    </div>
-                `;
-                return;
-            }
-            
-            // Salva estado original do botão
-            const textoOriginal = btn.textContent;
-            const corOriginal = btn.style.background;
-            
-            // Atualiza UI para estado de carregamento
-            btn.disabled = true;
-            btn.textContent = "TREINANDO...";
-            btn.style.background = "#f39c12";
-            
-            // Inicia simulação de progresso
-            simularProgressoTreinamento();
-            
-            feedback.innerHTML = '<div class="feedback-message">Iniciando treinamento da IA...</div>';
-            
-            try {
-                const response = await fetch('/treinar-ia-manual', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'}
-                });
-                
-                const resultado = await response.json();
-                
-                if (resultado.sucesso) {
-                    feedback.innerHTML = `
-                        <div class="feedback-message success-feedback">
-                            ✅ ${resultado.mensagem}
-                        </div>
-                        <div class="feedback-message" style="background: #e8f4fd; color: #1890ff; margin-top: 10px;">
-                             <strong>Treinamento em andamento:</strong><br>
-                            • Processando imagens coletadas<br>
-                            • Ajustando pesos da rede neural<br>
-                            • Validando precisão<br>
-                             Isto pode levar 2-5 minutos...
-                        </div>
-                    `;
-                    
-                    // Aguarda o treinamento terminar
-                    await aguardarTreinamentoCompleto();
-                    
-                } else {
-                    throw new Error(resultado.mensagem);
-                }
-                
-            } catch (error) {
-                feedback.innerHTML = `
-                    <div class="feedback-message error-feedback">
-                        ❌ Erro: ${error}
-                    </div>
-                `;
-            } finally {
-                btn.disabled = false;
-                btn.textContent = textoOriginal;
-                btn.style.background = corOriginal;
-            }
+function abrirModalCorrecao() {
+    const ultimaClassificacao = document.getElementById('ultimaClassificacao').textContent;
+    const modal = document.getElementById('modalCorrecao');
+    
+    if (ultimaClassificacao === '-') {
+        alert('Nenhuma classificação disponível para correção.');
+        return;
+    }
+    
+    const partes = ultimaClassificacao.split(' (');
+    const classe = partes[0];
+    const confianca = partes[1] ? partes[1].replace('%)', '') : '0';
+    
+    document.getElementById('classeAtualIa').textContent = classe;
+    document.getElementById('confiancaAtualIa').textContent = ` (${confianca}%)`;
+    modal.style.display = 'block';
+}
+
+function fecharModalCorrecao() {
+    document.getElementById('modalCorrecao').style.display = 'none';
+}
+
+async function enviarCorrecao() {
+    const classeCorreta = document.getElementById('classeCorreta').value;
+    const observacoes = document.getElementById('observacoesCorrecao').value;
+    const classeAtual = document.getElementById('classeAtualIa').textContent;
+    const confiancaAtual = parseFloat(document.getElementById('confiancaAtualIa').textContent.replace(/[()%]/g, '')) / 100;
+    
+    try {
+        const response = await fetch('/corrigir-classificacao', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                classe_ia: classeAtual,
+                confianca_ia: confiancaAtual,
+                classe_correta: classeCorreta,
+                observacoes: observacoes
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.sucesso) {
+            alert('✅ ' + data.mensagem);
+            fecharModalCorrecao();
+            atualizarStatus();
+        } else {
+            alert('❌ ' + data.mensagem);
         }
+    } catch (error) {
+        alert('❌ Erro: ' + error);
+    }
+}
 
-        // FUNÇÃO PARA AGUARDAR CONCLUSÃO DO TREINAMENTO
-        async function aguardarTreinamentoCompleto() {
-            const feedback = document.getElementById('feedbackArea');
+\\xai
+async function gerarExplicacaoXAI() {
+    const ultimaClassificacao = document.getElementById('ultimaClassificacao').textContent;
+    
+    if (ultimaClassificacao === '-') {
+        alert('Nenhuma classificação disponível para análise.');
+        return;
+    }
+    
+    const partes = ultimaClassificacao.split(' (');
+    const classe = partes[0];
+    const confianca = parseFloat(partes[1].replace('%)', '')) / 100;
+    
+    try {
+        const response = await fetch('/explicacao-xai', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                classe_predita: classe,
+                confianca: confianca
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (data.sucesso) {
+            const modal = document.getElementById('modalXAI');
+            const conteudo = document.getElementById('conteudoXAI');
             
-            const verificarStatus = setInterval(async () => {
-                await atualizarStatus();
-                const statusIa = document.getElementById('statusIa').textContent;
-                
-                if (statusIa === 'AUTOMATICO') {
-                    clearInterval(verificarStatus);
-                    feedback.innerHTML = `
-                        <div class="feedback-message success-feedback">
-                            IA TREINADA COM SUCESSO!<br>
-                            • Modo automático ativado<br>
-                            • Reconhecimento em tempo real<br>
-                            • Detecção de múltiplos defeitos
-                        </div>
-                    `;
-                }
-            }, 3000);
-        }
-
-        // NOVAS FUNÇÕES PARA AS FUNCIONALIDADES AVANÇADAS
-
-        // Funções para Correção Rápida
-        function abrirModalCorrecao() {
-            const ultimaClassificacao = document.getElementById('ultimaClassificacao').textContent;
-            const modal = document.getElementById('modalCorrecao');
+            conteudo.innerHTML = `
+                <h4>Explicação para: ${classe} (${(confianca * 100).toFixed(1)}%)</h4>
+                <img src="data:image/jpeg;base64,${data.imagem_explicacao}" class="xai-image">
+                <div class="xai-explanation">
+                    <strong>Áreas em vermelho:</strong> Regiões que mais influenciaram a decisão da IA<br>
+                    <strong>Áreas em azul:</strong> Regiões com menor influência
+                </div>
+            `;
             
-            if (ultimaClassificacao === '-') {
-                alert('Nenhuma classificação disponível para correção.');
-                return;
-            }
-            
-            // Extrai classe e confiança do texto - CORRIGIDO
-            const partes = ultimaClassificacao.split(' (');
-            const classe = partes[0];
-            const confianca = partes[1] ? partes[1].replace('%)', '') : '0';
-            
-            document.getElementById('classeAtualIa').textContent = classe;
-            document.getElementById('confiancaAtualIa').textContent = ` (${confianca}%)`;
             modal.style.display = 'block';
+        } else {
+            alert('❌ ' + data.mensagem);
         }
+    } catch (error) {
+        alert('❌ Erro: ' + error);
+    }
+}
 
-        function fecharModalCorrecao() {
-            document.getElementById('modalCorrecao').style.display = 'none';
-        }
+function fecharModalXAI() {
+    document.getElementById('modalXAI').style.display = 'none';
+}
 
-        async function enviarCorrecao() {
-            const classeCorreta = document.getElementById('classeCorreta').value;
-            const observacoes = document.getElementById('observacoesCorrecao').value;
-            const classeAtual = document.getElementById('classeAtualIa').textContent;
-            const confiancaAtual = parseFloat(document.getElementById('confiancaAtualIa').textContent.replace(/[()%]/g, '')) / 100;
-            
-            try {
-                const response = await fetch('/corrigir-classificacao', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        classe_ia: classeAtual,
-                        confianca_ia: confiancaAtual,
-                        classe_correta: classeCorreta,
-                        observacoes: observacoes
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.sucesso) {
-                    alert('✅ ' + data.mensagem);
-                    fecharModalCorrecao();
-                    atualizarStatus();
-                } else {
-                    alert('❌ ' + data.mensagem);
-                }
-            } catch (error) {
-                alert('❌ Erro: ' + error);
-            }
-        }
+// ==========================================
+// FUNÇÕES AUXILIARES
+// ==========================================
+function recarregarCamera() {
+    fetch('/recarregar-camera')
+        .then(response => response.json())
+        .then(data => {
+            alert(data.mensagem);
+            setTimeout(() => {
+                window.location.reload();
+            }, 1000);
+        })
+        .catch(error => {
+            alert('Erro ao recarregar câmera: ' + error);
+        });
+}
 
-        // Funções para Análise XAI
-        async function gerarExplicacaoXAI() {
-            const ultimaClassificacao = document.getElementById('ultimaClassificacao').textContent;
-            
-            if (ultimaClassificacao === '-') {
-                alert('Nenhuma classificação disponível para análise.');
-                return;
-            }
-            
-            const partes = ultimaClassificacao.split(' (');
-            const classe = partes[0];
-            const confianca = parseFloat(partes[1].replace('%)', '')) / 100;
-            
-            try {
-                const response = await fetch('/explicacao-xai', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        classe_predita: classe,
-                        confianca: confianca
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.sucesso) {
-                    const modal = document.getElementById('modalXAI');
-                    const conteudo = document.getElementById('conteudoXAI');
-                    
-                    conteudo.innerHTML = `
-                        <h4>Explicação para: ${classe} (${(confianca * 100).toFixed(1)}%)</h4>
-                        <img src="data:image/jpeg;base64,${data.imagem_explicacao}" class="xai-image">
-                        <div class="xai-explanation">
-                            <strong>Áreas em vermelho:</strong> Regiões que mais influenciaram a decisão da IA<br>
-                            <strong>Áreas em azul:</strong> Regiões com menor influência
-                        </div>
-                    `;
-                    
-                    modal.style.display = 'block';
-                } else {
-                    alert('❌ ' + data.mensagem);
-                }
-            } catch (error) {
-                alert('❌ Erro: ' + error);
-            }
-        }
+// Fecha modais ao clicar fora
+window.onclick = function(event) {
+    const modalCorrecao = document.getElementById('modalCorrecao');
+    const modalXAI = document.getElementById('modalXAI');
+    
+    if (event.target === modalCorrecao) {
+        modalCorrecao.style.display = 'none';
+    }
+    if (event.target === modalXAI) {
+        modalXAI.style.display = 'none';
+    }
+}
 
-        function fecharModalXAI() {
-            document.getElementById('modalXAI').style.display = 'none';
-        }
+// ==========================================
+// INICIALIZAÇÃO
+// ==========================================
+console.log('✅ Sistema de IA carregado');
+console.log('⌨️  Pressione M para alternar entre MODO ENSINO e MODO AUTOMÁTICO');
+console.log('🔒 O modo ficará TRAVADO até você alternar novamente');
 
-        // Funções auxiliares
-        function recarregarCamera() {
-            fetch('/recarregar-camera')
-                .then(response => response.json())
-                .then(data => {
-                    alert(data.mensagem);
-                    setTimeout(() => {
-                        window.location.reload();
-                    }, 1000);
-                })
-                .catch(error => {
-                    alert('Erro ao recarregar câmera: ' + error);
-                });
-        }
+// Atualiza status inicial
+atualizarStatus();
+atualizarAmostrasReais();
 
-        // Fecha modais ao clicar fora
-        window.onclick = function(event) {
-            const modalCorrecao = document.getElementById('modalCorrecao');
-            const modalXAI = document.getElementById('modalXAI');
-            
-            if (event.target === modalCorrecao) {
-                modalCorrecao.style.display = 'none';
-            }
-            if (event.target === modalXAI) {
-                modalXAI.style.display = 'none';
-            }
-        }
+// Atualiza periodicamente
+setInterval(atualizarStatus, 3000);
+setInterval(atualizarAmostrasReais, 5000);
 
-        // Atualiza o feed da câmera periodicamente
-        setInterval(() => {
-            const img = document.getElementById('cameraFeed');
-            img.src = "{{ url_for('video_feed') }}?t=" + new Date().getTime();
-        }, 100);
+// Atualiza feed da câmera
+setInterval(() => {
+    const img = document.getElementById('cameraFeed');
+    if (img) {
+        img.src = "{{ url_for('video_feed') }}?t=" + new Date().getTime();
+    }
+}, 100);
 
-        // Atualiza status automaticamente
-        setInterval(atualizarStatus, 3000);
-
-        // Inicialização
-        atualizarStatus();
     </script>
 </body>
 </html>

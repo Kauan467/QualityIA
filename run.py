@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """
 Script de Execução Principal
 Inicia o sistema Visual Inspector AI
@@ -9,11 +7,9 @@ import sys
 import logging
 from pathlib import Path
 
-# Adiciona src ao path
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 sys.path.insert(0, str(Path(__file__).parent))
 
-# Configuração básica de logging
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -29,10 +25,8 @@ def main():
         logger.info("=" * 60)
         logger.info("")
         
-        # Importa e executa app
         from web.app import app
         
-        # Configurações
         host = '0.0.0.0'
         port = 5050
         debug = True
@@ -44,7 +38,6 @@ def main():
         logger.info("🛑 Pressione Ctrl+C para parar")
         logger.info("")
         
-        # Inicia servidor
         app.run(host=host, port=port, debug=debug, use_reloader=False)
         
     except KeyboardInterrupt:

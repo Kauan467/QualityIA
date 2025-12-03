@@ -238,49 +238,46 @@ class SistemaMonitoramentoIA:
         return self._adicionar_overlay_ia(frame)
     
     def _adicionar_overlay_ia(self, frame):
+        """Adiciona overlay com informações - VERSÃO COMPACTA"""
         try:
             h, w = frame.shape[:2]
             
+            # Cor do status baseada no modo
             cor_status = (0, 255, 0) if self.estatisticas['estado_ia'] == 'AUTOMATICO' else (0, 255, 255)
             if self.estatisticas['estado_ia'] == 'TREINANDO':
                 cor_status = (255, 165, 0)
             elif self.estatisticas['estado_ia'] == 'MODO_ENSINO':
                 cor_status = (0, 255, 255)
             
-            # painel de status
-            cv2.rectangle(frame, (10, 10), (w-10, 180), (0, 0, 0), -1)
-            cv2.rectangle(frame, (10, 10), (w-10, 180), cor_status, 2)
+            # Painel de status COMPACTO
+            cv2.rectangle(frame, (10, 10), (min(w-10, 400), 120), (0, 0, 0), -1)
+            cv2.rectangle(frame, (10, 10), (min(w-10, 400), 120), cor_status, 2)
             
+            # Informações gerais - FONTE MENOR
             cv2.putText(frame, f"IA: {self.estatisticas['estado_ia']}", 
-                       (20, 35), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                       (20, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
             cv2.putText(frame, f"CLASSIFICACOES: {self.estatisticas['classificacoes_ia']}", 
-                       (20, 65), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                       (20, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
             cv2.putText(frame, f"APROVADOS: {self.estatisticas['aprovados_ia']}", 
-                       (20, 85), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                       (20, 67), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
             cv2.putText(frame, f"DEFEITOS: {self.estatisticas['defeitos_detectados']}", 
-                       (20, 105), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                       (20, 84), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
             cv2.putText(frame, f"AMOSTRAS: {self.estatisticas['amostras_coletadas']}", 
-                       (20, 125), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
-            cv2.putText(frame, f"CONFIANCA: {self.estatisticas['confianca_media']:.1%}", 
-                       (20, 145), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 1)
+                       (20, 101), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
             
-            # adiciona anotações visuais se houver defeito detectado
+            # Adiciona anotações visuais se houver defeito detectado
             ultima = self.estatisticas.get('ultima_classificacao')
-            if ultima and ultima['classe'] != 'APROVADO' and ultima['bbox'] is not None:
+            if ultima and ultima['classe'] != 'APROVADO' and ultima.get('bbox'):
                 frame = self.detector_visual.adicionar_anotacao_defeito(
                     frame, ultima['classe'], ultima['confianca'], ultima['bbox']
                 )
-                
-                frame = self.detector_visual.adicionar_heatmap_defeito(
-                    frame, ultima['classe'], ultima['bbox']
-                )
             
-            # texto da última classificação na parte inferior
+            # Texto da última classificação na parte inferior - COMPACTO
             if ultima:
                 cor_class = (0, 255, 0) if ultima['classe'] == 'APROVADO' else (0, 0, 255)
-                texto = f"ULTIMA: {ultima['descricao']} ({ultima['confianca']:.1%})"
-                cv2.putText(frame, texto, (20, h-20), 
-                           cv2.FONT_HERSHEY_SIMPLEX, 0.5, cor_class, 1)
+                texto = f"{ultima['descricao']} ({ultima['confianca']:.1%})"
+                cv2.putText(frame, texto, (20, h-15), 
+                           cv2.FONT_HERSHEY_SIMPLEX, 0.4, cor_class, 1)
             
             return frame
             
