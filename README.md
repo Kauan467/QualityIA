@@ -1,16 +1,13 @@
-# Visual Inspector AI
+# QualityIa
 
 Sistema de inspeção visual inteligente para bancos automotivos com IA.
+- Detecção de Defeitos**: 10 tipos de defeitos detectados automaticamente
+- Validação de Processos**: Verifica se etapas estão sendo seguidas corretamente
+- Dashboard: Monitoramento em tempo real com métricas
+- IA Explicável: XAI (Explainable AI) mostra por que detectou defeitos
+- Relatórios: Geração automática de relatórios de conformidade
 
-## 🎯 Recursos
-
-- 🔍 **Detecção de Defeitos**: 10 tipos de defeitos detectados automaticamente
-- ✅ **Validação de Processos**: Verifica se etapas estão sendo seguidas corretamente
-- 📊 **Dashboard**: Monitoramento em tempo real com métricas
-- 🤖 **IA Explicável**: XAI (Explainable AI) mostra por que detectou defeitos
-- 📈 **Relatórios**: Geração automática de relatórios de conformidade
-
-## 🚀 Instalação Rápida
+Instalação Rápida
 
 ```bash
 # 1. Clonar repositório
@@ -36,7 +33,7 @@ cp .env.example .env
 python run.py
 ```
 
-## 📁 Estrutura do Projeto
+Estrutura do Projeto
 
 ```
 visual_inspector_ai/
@@ -52,33 +49,31 @@ visual_inspector_ai/
 └── tests/           # Testes
 ```
 
-## 🎓 Uso Básico
-
-### Iniciar Sistema
+Iniciar Sistema
 ```bash
 python run.py
 ```
 
 Acesse: http://localhost:5050
 
-### Treinar IA
+Treinar IA
 1. Cole amostras em `data/treinamento/defeitos/`
 2. Acesse interface web
 3. Clique em "Treinar IA"
 
-### Validar Processo
+Validar Processo
 1. Clique em "Iniciar Novo Banco"
 2. Sistema valida automaticamente cada etapa
 3. Ao finalizar, gera relatório completo
 
-## 📚 Documentação
+Documentação
 
 - [Instalação Detalhada](docs/INSTALACAO.md)
 - [Guia de Uso](docs/USO.md)
 - [API Reference](docs/API.md)
 - [Desenvolvimento](docs/DESENVOLVIMENTO.md)
 
-## 🔧 Configuração
+Configuração
 
 Edite `config/config.yaml` para customizar:
 - Parâmetros da câmera
@@ -86,7 +81,7 @@ Edite `config/config.yaml` para customizar:
 - Processos de validação
 - Categorias de defeitos
 
-## 🧪 Testes
+Testes
 
 ```bash
 # Executar todos os testes
@@ -96,18 +91,18 @@ pytest tests/
 pytest tests/test_detector.py
 ```
 
-## 📊 Status
+Status
 
-- ✅ Detecção de defeitos funcionando
-- ✅ Interface web operacional
-- ✅ Dashboard de métricas
-- 🚧 Validação de processos (em desenvolvimento)
-- 🚧 IA de etapas (em desenvolvimento)
+- Detecção de defeitos funcionando(DONE)
+- Interface web operacional(DONE)
+- Dashboard de métricas (DONE)
+- Validação de processos (em desenvolvimento)
+- IA de etapas (em desenvolvimento)
 
-## 📝 Licença
+Licença
 
 Proprietary - Todos os direitos reservados
 
-## 👥 Suporte
+Suporte
 
 Para dúvidas ou problemas, entre em contato.
